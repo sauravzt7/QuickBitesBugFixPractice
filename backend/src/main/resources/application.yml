@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: quickbites-backend
+  datasource:
+    url: jdbc:h2:mem:quickbites;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+  h2:
+    console:
+      enabled: true
+
+quickbites:
+  pricing:
+    delivery-fee-per-restaurant: 5.00
+    free-delivery-threshold: 50.00
+  auth:
+    token-ttl-minutes: 120
