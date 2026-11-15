@@ -109,3 +109,20 @@ technical-specs/  DeliveryFeeWaiver.md
 
 Spoiler-free hint level 1: `grep -rn "deliveryFee" backend/src/main`.
 A reference fix lives on the **`solution`** branch — don't peek until you're done.
+
+---
+
+## Solution notes (`solution` branch)
+
+There were **three** defects, which is why fixing one spot isn't enough:
+
+1. **`CartService`** called the overload `calculate(restaurantCount)`, which ignores the
+   subtotal, so the cart never applied the waiver.
+2. **`OrderService`** didn't use the calculator at all. It recomputed
+   `feePerRestaurant × count` inline, so the saved order still charged delivery even
+   after the cart was fixed (breaks spec R5).
+3. **`DeliveryFeeCalculator.qualifiesForFreeDelivery`** used `> 0` instead of `>= 0`, so a
+   subtotal of exactly $50.00 didn't qualify (spec R2).
+
+Fix: make `calculate(subtotal, count)` the only public entry point (the base-fee
+helper is now private), route both cart and checkout through it, and use `>=`.

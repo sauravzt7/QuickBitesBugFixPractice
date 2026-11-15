@@ -1,6 +1,5 @@
 package com.quickbites.service;
 
-import com.quickbites.config.PricingProperties;
 import com.quickbites.dto.CheckoutRequest;
 import com.quickbites.dto.OrderResponse;
 import com.quickbites.exception.BadRequestException;
@@ -27,18 +26,18 @@ public class OrderService {
     private final CartRepository cartRepository;
     private final OrderRepository orderRepository;
     private final PaymentService paymentService;
-    private final PricingProperties pricing;
+    private final DeliveryFeeCalculator deliveryFeeCalculator;
 
     public OrderService(CartService cartService,
                         CartRepository cartRepository,
                         OrderRepository orderRepository,
                         PaymentService paymentService,
-                        PricingProperties pricing) {
+                        DeliveryFeeCalculator deliveryFeeCalculator) {
         this.cartService = cartService;
         this.cartRepository = cartRepository;
         this.orderRepository = orderRepository;
         this.paymentService = paymentService;
-        this.pricing = pricing;
+        this.deliveryFeeCalculator = deliveryFeeCalculator;
     }
 
     public OrderResponse checkout(Long userId, CheckoutRequest request) {
@@ -50,9 +49,8 @@ public class OrderService {
 
         BigDecimal subtotal = CartService.subtotalOf(items);
         int restaurantCount = CartService.countUniqueRestaurants(items);
-        // Delivery: flat fee per restaurant the courier has to visit.
-        BigDecimal deliveryFee = MoneyUtil.round(
-                pricing.deliveryFeePerRestaurant().multiply(BigDecimal.valueOf(restaurantCount)));
+        // Same calculator as the cart, so cart and order always agree (spec R5).
+        BigDecimal deliveryFee = deliveryFeeCalculator.calculate(subtotal, restaurantCount);
         BigDecimal total = MoneyUtil.round(subtotal.add(deliveryFee));
 
         String last4 = paymentService.charge(request, total);

@@ -107,7 +107,7 @@ public class CartService {
 
         int restaurantCount = countUniqueRestaurants(cart.getItems());
         BigDecimal subtotal = subtotalOf(cart.getItems());
-        BigDecimal deliveryFee = deliveryFeeCalculator.calculate(restaurantCount);
+        BigDecimal deliveryFee = deliveryFeeCalculator.calculate(subtotal, restaurantCount);
         BigDecimal total = MoneyUtil.round(subtotal.add(deliveryFee));
 
         return new CartResponse(items, restaurantCount, subtotal, deliveryFee, total,

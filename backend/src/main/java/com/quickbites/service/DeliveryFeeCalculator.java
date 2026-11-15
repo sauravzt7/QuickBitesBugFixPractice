@@ -21,9 +21,10 @@ public class DeliveryFeeCalculator {
     }
 
     /**
-     * Flat fee: one delivery fee per unique restaurant.
+     * Base fee (no waiver): one delivery fee per unique restaurant.
+     * Private so callers can't bypass the free-delivery rule.
      */
-    public BigDecimal calculate(int restaurantCount) {
+    private BigDecimal baseFee(int restaurantCount) {
         if (restaurantCount <= 0) {
             return MoneyUtil.ZERO;
         }
@@ -31,17 +32,18 @@ public class DeliveryFeeCalculator {
     }
 
     /**
-     * Fee taking the free-delivery promotion into account.
+     * Single source of truth for the delivery fee (spec R1-R3, R5):
+     * $0 when subtotal >= threshold, otherwise fee x unique restaurants.
      */
     public BigDecimal calculate(BigDecimal subtotal, int restaurantCount) {
         if (qualifiesForFreeDelivery(subtotal)) {
             return MoneyUtil.ZERO;
         }
-        return calculate(restaurantCount);
+        return baseFee(restaurantCount);
     }
 
     public boolean qualifiesForFreeDelivery(BigDecimal subtotal) {
-        return subtotal != null && subtotal.compareTo(pricing.freeDeliveryThreshold()) > 0;
+        return subtotal != null && subtotal.compareTo(pricing.freeDeliveryThreshold()) >= 0;
     }
 
     public BigDecimal getFreeDeliveryThreshold() {
